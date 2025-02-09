@@ -47,11 +47,16 @@ jobs:
       with:
         persist-credentials: false
 
+    - name: lowercase repo-owner
+      run: |
+        # use Bash to convert to lowercase
+        echo "REPO_OWNER_LOWER=${GITHUB_REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
     - name: Login to GitHub Container Registry
       uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
       with:
         registry: ghcr.io
-        username: ${{ github.repository_owner }}
+        username: ${{ env.REPO_OWNER_LOWER }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push
@@ -60,4 +65,4 @@ jobs:
         file: ./Dockerfile_${{ matrix.prefix }}_${{ matrix.version }}_${{ matrix.arch }}
         platforms: ${{ matrix.platforms }}
         push: ${{ github.event_name != 'pull_request' }}
-        tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.prefix }}_${{ matrix.version }}_${{ matrix.arch }}-hdf5
+        tags: ghcr.io/${{ env.REPO_OWNER_LOWER }}/${{ matrix.prefix }}_${{ matrix.version }}_${{ matrix.arch }}-hdf5
