@@ -50,6 +50,7 @@ jobs:
     - name: lowercase repo-owner
       run: |
         # use Bash to convert to lowercase
+        # gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
         echo "REPO_OWNER_LOWER=${GITHUB_REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
 
     - name: Login to GitHub Container Registry
