@@ -5,6 +5,8 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build_image:
     name: Build ${{ matrix.prefix }} image for ${{ matrix.arch }}
