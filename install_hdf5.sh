@@ -20,10 +20,13 @@ if which yum; then
 fi
 
 echo "Downloading & unpacking HDF5 ${HDF5_VERSION}"
-HDF5_TAG="hdf5_${HDF5_VERSION}"
-curl -fsSLO "https://github.com/HDFGroup/hdf5/archive/refs/tags/${HDF5_TAG}.tar.gz"
-tar -xzf $HDF5_TAG.tar.gz
-pushd hdf5-$HDF5_TAG
+# Releases after 2.1.0 are tagged with the plain version only (e.g. "2.2.0");
+# older releases use the "hdf5_X.Y.Z" tag convention.
+curl -fsSL -o "hdf5-${HDF5_VERSION}.tar.gz" "https://github.com/HDFGroup/hdf5/archive/refs/tags/${HDF5_VERSION}.tar.gz" \
+    || curl -fsSL -o "hdf5-${HDF5_VERSION}.tar.gz" "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz"
+mkdir -p "hdf5-${HDF5_VERSION}"
+tar -xzf "hdf5-${HDF5_VERSION}.tar.gz" --strip-components=1 -C "hdf5-${HDF5_VERSION}"
+pushd "hdf5-${HDF5_VERSION}"
 
 echo "Configuring, building & installing HDF5 ${HDF5_VERSION} to ${HDF5_DIR}"
 mkdir build
@@ -45,8 +48,8 @@ popd
 
 # Clean up to limit the size of the Docker image
 echo "Cleaning up unnecessary files"
-rm -r hdf5-$HDF5_TAG
-rm $HDF5_TAG.tar.gz
+rm -r "hdf5-${HDF5_VERSION}"
+rm "hdf5-${HDF5_VERSION}.tar.gz"
 
 if which yum; then
     yum erase -y zlib-devel
