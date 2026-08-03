@@ -22,11 +22,31 @@ fi
 echo "Downloading & unpacking HDF5 ${HDF5_VERSION}"
 # Releases after 2.1.0 are tagged with the plain version only (e.g. "2.2.0");
 # older releases use the "hdf5_X.Y.Z" tag convention.
-curl -fsSL -o "hdf5-${HDF5_VERSION}.tar.gz" "https://github.com/HDFGroup/hdf5/archive/refs/tags/${HDF5_VERSION}.tar.gz" \
-    || curl -fsSL -o "hdf5-${HDF5_VERSION}.tar.gz" "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz"
-mkdir -p "hdf5-${HDF5_VERSION}"
-tar -xzf "hdf5-${HDF5_VERSION}.tar.gz" --strip-components=1 -C "hdf5-${HDF5_VERSION}"
-pushd "hdf5-${HDF5_VERSION}"
+urls=(
+    "https://github.com/HDFGroup/hdf5/archive/refs/tags/${HDF5_VERSION}.tar.gz"
+    "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz"
+)
+
+# NB: HDF5_DIR is already taken (the install prefix, set by the Dockerfiles)
+HDF5_SRC_DIR="hdf5-${HDF5_VERSION}"
+HDF5_TARBALL="${HDF5_SRC_DIR}.tar.gz"
+
+set +e
+for url in "${urls[@]}"; do
+    echo "downloading from $url"
+    curl --location "$url" --output "${HDF5_TARBALL}" --fail --silent --show-error
+    if [[ "$?" == 0 ]]; then
+        echo "download succeeded"
+        break
+    else
+        echo "download failed"
+    fi
+done
+set -e
+
+mkdir -p "${HDF5_SRC_DIR}"
+tar -xzf "${HDF5_TARBALL}" --strip-components=1 --directory "${HDF5_SRC_DIR}"
+pushd "${HDF5_SRC_DIR}"
 
 echo "Configuring, building & installing HDF5 ${HDF5_VERSION} to ${HDF5_DIR}"
 mkdir build
@@ -48,8 +68,8 @@ popd
 
 # Clean up to limit the size of the Docker image
 echo "Cleaning up unnecessary files"
-rm -r "hdf5-${HDF5_VERSION}"
-rm "hdf5-${HDF5_VERSION}.tar.gz"
+rm -r "${HDF5_SRC_DIR}"
+rm "${HDF5_TARBALL}"
 
 if which yum; then
     yum erase -y zlib-devel
