@@ -11,6 +11,9 @@ jobs:
   build_image:
     name: Build ${{ matrix.prefix }} image for ${{ matrix.arch }}
     runs-on: ${{ matrix.runs-on }}
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         include:
